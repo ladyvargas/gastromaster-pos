@@ -19,30 +19,23 @@ const app = express();
 const httpServer = createServer(app);
 
 const PORT = Number(process.env.PORT || 4000);
-const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const CORS_ORIGIN = process.env.CORS_ORIGIN;
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (ALLOWED_ORIGINS.length === 0) return callback(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      return callback(null, true);
-    }
+app.use(
+  cors({
+    origin: CORS_ORIGIN || true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-    return callback(new Error("Not allowed by CORS"));
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: CORS_ORIGIN || true,
+    credentials: true,
   },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
-const io = new SocketIOServer(httpServer, { cors: corsOptions });
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
