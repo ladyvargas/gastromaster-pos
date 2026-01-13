@@ -19,12 +19,21 @@ const app = express();
 const httpServer = createServer(app);
 
 const PORT = Number(process.env.PORT || 4000);
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
+const CORS_ORIGIN = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map(o => o.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: CORS_ORIGIN.length ? CORS_ORIGIN : true,
+  credentials: true
+};
+
+const io = new SocketIOServer(httpServer, { cors: corsOptions });
+
+app.use(cors(corsOptions));
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
-const io = new SocketIOServer(httpServer, { cors: { origin: CORS_ORIGIN } });
-
-app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
