@@ -19,22 +19,16 @@ const app = express();
 const httpServer = createServer(app);
 
 const PORT = Number(process.env.PORT || 4000);
-const CORS_ORIGIN = process.env.CORS_ORIGIN;
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-app.use(
-  cors({
-    origin: CORS_ORIGIN || true,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
 
-const io = new SocketIOServer(httpServer, {
-  cors: {
-    origin: CORS_ORIGIN || true,
-    credentials: true,
-  },
+  next();
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
