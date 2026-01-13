@@ -30,7 +30,9 @@ app.use((req, res, next) => {
 
   next();
 });
-
+const io = new SocketIOServer(httpServer, {
+  cors: { origin: "*" },
+});
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 app.use(express.json({ limit: "1mb" }));
