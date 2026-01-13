@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdOrders Order[] @relation("CreatedOrders")
+}
+
+model Table {
+  id             Int      @id @default(autoincrement())
+  label          String   @unique
+  status         String   @default("FREE")
+  currentOrderId Int?     @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  currentOrder   Order?   @relation("CurrentOrder", fields: [currentOrderId], references: [id])
+  orders         Order[]  @relation("TableOrders")
+}
+
+model Product {
+  id         Int      @id @default(autoincrement())
+  sku        String   @unique
+  name       String
+  priceCents Int
+  stock      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id              Int      @id @default(autoincrement())
+  tableId         Int
+  status          String   @default("OPEN")
+  totalCents      Int      @default(0)
+  createdByUserId Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  table           Table    @relation("TableOrders", fields: [tableId], references: [id])
+  activeOnTable   Table?   @relation("CurrentOrder")
+  createdBy       User     @relation("CreatedOrders", fields: [createdByUserId], references: [id])
+
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  productId  Int
+  qty        Int
+  priceCents Int
+  createdAt  DateTime @default(now())
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id])
+}
